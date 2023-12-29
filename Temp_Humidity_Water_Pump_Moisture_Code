@@ -1,0 +1,126 @@
+#Here is a Practice Code
+#Further Changes can be Done For Improvement.
+
+#define BLYNK_TEMPLATE_ID "TMPL3h1S7h5u-"   // Blynk Application Lines Of code
+#define BLYNK_TEMPLATE_NAME "Smart Agriculture Monitoring System"
+
+#include <LiquidCrystal_I2C.h>
+#include <Wire.h>
+#include <WiFiClient.h>
+#include <BlynkSimpleEsp32.h>
+
+#include <DFRobot_DHT11.h>
+DFRobot_DHT11 DHT;
+#define DHT11_PIN 27
+
+#define BLYNK_TEMPLATE_ID "TMPL3h1S7h5u-"
+#define BLYNK_TEMPLATE_NAME "Smart Agriculture Monitoring System"
+
+#define sensor 33
+int relay=2;
+//int relaystate=1;
+
+//Initialize the LCD display
+LiquidCrystal_I2C lcd(0x27, 16, 2);
+
+BlynkTimer timer;
+
+// Enter your Auth token
+char auth[] = "h58-nz2rR8lGUxlETIMTT_nWCEDfOUUa";
+
+//Enter your WIFI SSID and password
+char ssid[] = "EACCESS";
+char pass[] = "hostelnet";
+
+void setup() {
+  // Debug console
+  Serial.begin(115200);
+
+  //dht.begin();
+  Blynk.begin(auth, ssid, pass, "blynk.cloud", 80);
+  lcd.init();
+  lcd.backlight();
+  pinMode(relay, OUTPUT);
+  digitalWrite(relay, HIGH);
+  lcd.setCursor(0, 0);
+  lcd.print("System");
+  lcd.setCursor(4, 1);
+  lcd.print("Loading..");
+  delay(4000);
+  lcd.clear();
+}
+
+//Get the ultrasonic sensor values
+void soilMoisture() {
+  int value = analogRead(sensor);
+  DHT.read(DHT11_PIN);
+int value1 = map(value, 0, 4095, 0, 100);
+  value1 = (value1 - 100) * -1;
+  Blynk.virtualWrite(V0, value1);
+  Serial.println(value1);
+  Serial.print("Adc Value");
+  //Serial.print(value);
+  lcd.setCursor(0, 0);
+  Serial.print(value);
+  lcd.setCursor(0, 0);
+  lcd.print("Moist:");
+  lcd.print(value1);
+   lcd.setCursor(8, 0);
+   lcd.print(" ");
+   lcd.print("Tem:");
+  lcd.print(DHT.temperature);
+  lcd.println("C");
+  lcd.setCursor(0, 1);
+  lcd.print("Hum:");
+  lcd.print(DHT.humidity);
+  lcd.print(" ");
+ 
+  delay(2000);
+
+Serial.print("Current humidity = ");
+Serial.println(DHT.humidity);
+Serial.print("% ");
+Serial.print("temperature = ");
+Serial.print(DHT.temperature);
+Serial.println("C ");
+delay(3000);
+Blynk.virtualWrite(V2, DHT.temperature);
+Blynk.virtualWrite(V3, DHT.humidity);
+ if (value1 <50) {
+    digitalWrite(relay,LOW);
+    Serial.print("AJAYPAL");
+    lcd.setCursor(7, 1);
+    lcd.print ("ON");
+  } else {
+    digitalWrite(relay,HIGH);
+    lcd.setCursor(9, 1);
+    lcd.print("OFF");
+    Serial.print("SINGH");
+  }
+
+  if (value1 >60 ) {
+    lcd.setCursor(13, 1);
+    lcd.print("HIGH");
+   // digitalWrite(relay, HIGH);
+  } else if (value1 > 40 && value1 <60 ) {
+   lcd.setCursor(13, 1);
+    lcd.print("MID");
+    
+  } else if (value1<40) {
+   lcd.setCursor(13, 1);
+    lcd.print("LOW");
+    //digitalWrite(relay, LOW);
+  }
+}
+
+
+
+void loop() {
+  delay(2000);
+  soilMoisture();
+  
+ Blynk.run();//Run the Blynk library
+
+delay(200);
+
+}
